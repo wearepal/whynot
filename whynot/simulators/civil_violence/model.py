@@ -4,7 +4,7 @@ import math
 from mesa import Agent
 from mesa import Model
 from mesa.time import BaseScheduler
-from mesa.space import Grid
+from mesa.space import _Grid
 
 
 class Citizen(Agent):
@@ -290,7 +290,7 @@ class CivilViolenceModel(Model):
         self.iteration = 0
         self.prison_interaction = prison_interaction
         self.schedule = RandomActivation(self)
-        self.grid = Grid(height, width, torus=True)
+        self.grid = _Grid(height, width, torus=True)
 
     def add_agent(
         self,

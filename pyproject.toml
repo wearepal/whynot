@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "whynot"
+authors = [
+    "John Miller",
+    "Chloe Hsu",
+    "Jordan Troutman",
+    "Juan Perdomo",
+    "Tijana Zrnic",
+    "Lydia Liu",
+    "Yu Sun",
+    "Ludwig Schmidt",
+    "Moritz Hardt",
+]
+version = "0.1.0"
+description = "A Python package that provides an experimental sandbox for decisions in dynamics."
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+mesa = "^2.1.2"
+numpy = "^1.26.0"
+scikit-learn = "^1.3.1"
+matplotlib = "^3.8.0"
+gym = "^0.26.2"
+py-mini-racer = "^0.6.0"
+pandas = "^2.1.1"
+polars = "^0.19.5"
+networkx = "^3.1"
+scipy = "^1.11.3"
+statsmodels = "^0.14.0"
+tqdm = "^4.66.1"
+pyomo = "^6.6.2"
+ranzen = "^2.2.0"
+autograd = "^1.6.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.291"
+black = "^23.9.1"
+pytest = "^7.4.2"
+pydocstyle = "^6.3.0"
+sphinx = "^7.2.6"
+sphinxcontrib-bibtex = "^2.6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
