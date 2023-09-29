@@ -1,8 +1,9 @@
 """Simulate and analyze runs from the Schelling segregation model."""
+import numpy as np
+import pandas as pd
 import dataclasses
 
-from mesa.batchrunner import BatchRunner
-import numpy as np
+from mesa.batchrunner import batch_run
 
 from whynot.simulators.schelling.model import Schelling
 
@@ -65,22 +66,23 @@ def simulate(config, rollouts=10, seed=None):
             for each rollout.
 
     """
-    model_reporters = {"Segregated_Agents": get_segregation}
-
     rng = np.random.RandomState(seed)
+    parameters = dataclasses.asdict(config)
+    parameters |= {"seed": rng.randint(9999999, size=rollouts)}
+    model_reporters = {"Segregated_Agents": get_segregation}
+    parameters |= {"model_reporters": model_reporters}
 
-    param_sweep = BatchRunner(
-        Schelling,
-        fixed_parameters=dataclasses.asdict(config),
+    param_sweep = batch_run(
+        model_cls=Schelling,
+        parameters=parameters,
         max_steps=200,
-        model_reporters=model_reporters,
         display_progress=False,
-        # Use a different seed for each rollout
-        variable_parameters={"seed": rng.randint(9999999, size=rollouts)},
+        number_processes=1,
+        data_collection_period=-1,
         # Single rollout for each seed
         iterations=1,
     )
-    param_sweep.run_all()
+    param_sweep = pd.DataFrame(param_sweep)
     dataframe = param_sweep.get_model_vars_dataframe()
     # Currently just reports the fraction segregated.
     return dataframe.Segregated_Agents.mean()

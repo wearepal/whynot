@@ -1,4 +1,5 @@
 """Implements the classic Schelling model in the Mesa framework."""
+import random
 
 from mesa import Model, Agent
 from mesa.time import RandomActivation
@@ -9,7 +10,7 @@ from mesa.datacollection import DataCollector
 class SchellingAgent(Agent):
     """Schelling segregation agent model."""
 
-    def __init__(self, pos, model, agent_type, homophily):
+    def __init__(self, pos, model, agent_type, homophily) -> None:
         """Create a new Schelling agent.
 
         Parameters
@@ -24,7 +25,7 @@ class SchellingAgent(Agent):
         self.type = agent_type
         self.homophily = homophily
 
-    def step(self):
+    def step(self) -> None:
         """Update the agent model after one step."""
         similar = 0
         for neighbor in self.model.grid.neighbor_iter(self.pos):
@@ -50,8 +51,9 @@ class Schelling(Model):
         homophily=3,
         education_boost=0,
         education_pc=0.2,
-        seed=None,
-    ):
+        model_reporters=None,
+        seed: int | None = None,
+    ) -> None:
         """Seed is used to set randomness in the __new__ function of the Model superclass."""
         # pylint: disable-msg=unused-argument,super-init-not-called
 
@@ -67,39 +69,45 @@ class Schelling(Model):
         self.grid = SingleGrid(height, width, torus=True)
 
         self.happy = 0
+        model_reporters_aug = {"happy": "happy"}
+        if model_reporters is not None:
+            model_reporters_aug |= model_reporters
         self.datacollector = DataCollector(
-            {"happy": "happy"},  # Model-level count of happy agents
+            model_reporters=model_reporters_aug,
             # For testing purposes, agent's individual x and y
-            {"x": lambda a: a.pos[0], "y": lambda a: a.pos[1]},
+            agent_reporters={"x": lambda a: a.pos[0], "y": lambda a: a.pos[1]},
         )
 
         # Set up agents
         # We use a grid iterator that returns
         # the coordinates of a cell as well as
         # its contents. (coord_iter)
+        generator = random.Random(seed)
         for cell in self.grid.coord_iter():
-            x_coord = cell[1]
-            y_coord = cell[2]
-            if self.random.random() < self.density:
-                if self.random.random() < self.minority_pc:
+            _, xy_coords = cell
+            if generator.random() < self.density:
+                if random.random() < self.minority_pc:
                     agent_type = 1
                 else:
                     agent_type = 0
 
                 agent_homophily = homophily
-                if self.random.random() < self.education_pc:
+                if generator.random() < self.education_pc:
                     agent_homophily += self.education_boost
 
                 agent = SchellingAgent(
-                    (x_coord, y_coord), self, agent_type, agent_homophily
+                    pos=xy_coords,
+                    model=self,
+                    agent_type=agent_type,
+                    homophily=agent_homophily,
                 )
-                self.grid.position_agent(agent, (x_coord, y_coord))
+                self.grid.place_agent(agent=agent, pos=xy_coords)
                 self.schedule.add(agent)
 
         self.running = True
         self.datacollector.collect(self)
 
-    def step(self):
+    def step(self) -> None:
         """Run one step of the model. If All agents are happy, halt the model."""
         self.happy = 0  # Reset counter of happy agents
         self.schedule.step()

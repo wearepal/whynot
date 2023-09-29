@@ -1,37 +1,57 @@
 # -*- coding: utf-8 -*-
-import whynot.gym as gym
-from whynot.gym import error, envs
-from whynot.gym.envs import registration
-import whynot.simulators as simulators
+import numpy as np
+
+from typing import ClassVar
+from gymnasium import spaces
+import gymnasium
+from whynot.gym import envs
 
 
-class ArgumentEnv(gym.Env):
+class ArgumentEnv(gymnasium.Env):
+    SIZE: ClassVar[int] = 5
+
     def __init__(self, arg1, arg2, arg3):
         self.arg1 = arg1
         self.arg2 = arg2
         self.arg3 = arg3
+        # Gymnasium requires the action and observations spaces be defined
+        # even if they're unneeded for this dummy environment.
+        self.action_space = spaces.Discrete(3)
+        self.observation_space = spaces.Dict(
+            {
+                "agent": spaces.Box(0, self.SIZE - 1, shape=(2,), dtype=np.int_),
+                "target": spaces.Box(0, self.SIZE - 1, shape=(2,), dtype=np.int_),
+            }
+        )
 
 
-gym.register(
+gymnasium.register(
     id="test.ArgumentEnv-v0",
     entry_point="test_registration:ArgumentEnv",
-    kwargs={"arg1": "arg1", "arg2": "arg2",},
+    kwargs={
+        "arg1": "arg1",
+        "arg2": "arg2",
+    },
 )
 
 
 def test_make():
-    env = envs.make("HIV-v0")
+    env = gymnasium.make("HIV-v0")
+    assert env.spec is not None
     assert env.spec.id == "HIV-v0"
     assert isinstance(env.unwrapped, envs.ODEEnvBuilder)
 
 
 def test_make_with_kwargs():
-    env = envs.make("test.ArgumentEnv-v0", arg2="override_arg2", arg3="override_arg3")
+    env = gymnasium.make(
+        "test.ArgumentEnv-v0", arg2="override_arg2", arg3="override_arg3"
+    )
+    assert env.spec is not None
     assert env.spec.id == "test.ArgumentEnv-v0"
     assert isinstance(env.unwrapped, ArgumentEnv)
-    assert env.arg1 == "arg1"
-    assert env.arg2 == "override_arg2"
-    assert env.arg3 == "override_arg3"
+    assert env.get_wrapper_attr("arg1") == "arg1"
+    assert env.get_wrapper_attr("arg2") == "override_arg2"
+    assert env.get_wrapper_attr("arg3") == "override_arg3"
 
 
 def test_spec():
@@ -40,24 +60,20 @@ def test_spec():
 
 
 def test_missing_lookup():
-    registry = registration.EnvRegistry()
-    registry.register(id="Test-v1", entry_point=None)
+    gymnasium.register(id="Test-v1", entry_point="dummy-entry-point")
     try:
-        registry.spec("Unknown-v1")
-    except error.UnregisteredEnv:
+        gymnasium.registry["Unknown-v1"]
+    except KeyError:
         pass
     else:
         assert False
 
 
 def test_malformed_lookup():
-    registry = registration.EnvRegistry()
     try:
-        registry.spec(u"“Breakout-v0”")
-    except error.Error as e:
-        assert "malformed environment ID" in "{}".format(
-            e
-        ), "Unexpected message: {}".format(e)
+        gymnasium.registry["“Breakout-v0”"]
+    except KeyError:
+        pass
     else:
         assert False
 

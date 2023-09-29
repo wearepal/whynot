@@ -32,6 +32,11 @@ tqdm = "^4.66.1"
 pyomo = "^6.6.2"
 ranzen = "^2.2.0"
 autograd = "^1.6.2"
+jax = "^0.4.16"
+jaxlib = "^0.4.16"
+mujoco-py = "^2.1.2.14"
+gymnasium = "^0.29.1"
+box2d = "2.3.2"
 
 
 [tool.poetry.group.dev.dependencies]

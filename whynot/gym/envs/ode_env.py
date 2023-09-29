@@ -2,8 +2,12 @@
 import copy
 import inspect
 
-from whynot.gym import Env
-from whynot.gym.utils import seeding
+from gymnasium import Env
+from gymnasium.utils import seeding
+
+__all__ = [
+    "ODEEnvBuilder",
+]
 
 
 class ODEEnvBuilder(Env):
@@ -19,8 +23,8 @@ class ODEEnvBuilder(Env):
         intervention_fn,
         reward_fn,
         observation_fn=None,
-        timestep=1.0,
-    ):
+        timestep: float = 1.0,
+    ) -> None:
         """Initialize an environment class.
 
         Parameters

@@ -11,12 +11,11 @@ and the dynamics are taken from:
 """
 import copy
 import dataclasses
+import numpy as np
 from typing import Any
 
 import whynot as wn
-import whynot.traceable_numpy as np
 from whynot.dynamics import BaseConfig, BaseIntervention, BaseState
-from whynot.simulators.credit.dataloader import CreditData
 
 
 @dataclasses.dataclass
@@ -50,7 +49,9 @@ class Config(BaseConfig):
 
     # Dynamics parameters
     #: Subset of the features that can be manipulated by the agent
-    changeable_features: np.ndarray = dataclasses.field(default_factory=lambda: np.array([0, 5, 7]))
+    changeable_features: np.ndarray = dataclasses.field(
+        default_factory=lambda: np.array([0, 5, 7])
+    )
 
     #: Model how much the agent adapt her features in response to a classifier
     epsilon: float = 0.1
@@ -175,7 +176,9 @@ def dynamics(state, time, config, intervention=None):
     return strategic_features, labels
 
 
-def simulate(initial_state, config, intervention=None, seed=None):
+def simulate(
+    initial_state: State, config: Config, intervention=None, seed: int | None = None
+) -> wn.dynamics.Run:
     """Simulate a run of the Credit model.
 
     Parameters

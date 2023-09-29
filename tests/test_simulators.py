@@ -1,4 +1,5 @@
 """Simple integration and determinism tests for all simulators."""
+from types import ModuleType
 import numpy as np
 import pytest
 
@@ -39,11 +40,13 @@ def check_shapes(dataset, num_samples):
         "zika",
     ],
 )
-def test_dynamics_initial_state(simulator):
+def test_dynamics_initial_state(simulator: ModuleType) -> None:
     """For ODE simulators, ensure the iniitial_state is returned by reference in run."""
+    breakpoint()
     initial_state = simulator.State()
     config = simulator.Config()
     run = simulator.simulate(initial_state, config)
+    breakpoint()
     assert len(run.states) == len(run.times)
     assert run.initial_state is initial_state
     assert np.allclose(config.delta_t, run.times[1] - run.times[0])

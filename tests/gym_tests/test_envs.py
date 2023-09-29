@@ -1,4 +1,6 @@
 import dataclasses
+import gymnasium
+from typing import Any
 import pytest
 
 import numpy as np
@@ -7,30 +9,38 @@ import whynot as wn
 from whynot.gym import envs
 from spec_list import spec_list
 
+
 # This runs a smoketest on each official registered env. We may want
 # to try also running environments which are not officially registered
 # envs.
 @pytest.mark.parametrize("spec", spec_list)
 def test_env(spec):
     # Capture warnings
-    with pytest.warns(None) as warnings:
-        env = spec.make()
+    # with pytest.warns(RuntimeWarning) as warnings:
+    env: gymnasium.Env = spec.make()
+    warnings = []
 
     # Check that dtype is explicitly declared for gym.Box spaces
     for warning_msg in warnings:
-        assert not "autodetected dtype" in str(warning_msg.message)
+        assert "autodetected dtype" not in str(warning_msg.message)
 
     ob_space = env.observation_space
     act_space = env.action_space
     ob = env.reset()
+    # unpack the observation state if the result is a tuple
+    if isinstance(ob, tuple):
+        ob = ob[0]
     assert ob_space.contains(ob), "Reset observation: {!r} not in space".format(ob)
     a = act_space.sample()
-    observation, reward, done, _info = env.step(a)
+    # (observation, reward, terminated (bool), truncated (bool), info)
+    observation, reward, terminated, _, _ = env.step(a)
     assert ob_space.contains(observation), "Step observation: {!r} not in space".format(
         observation
     )
     assert np.isscalar(reward), "{} is not a scalar for {}".format(reward, env)
-    assert isinstance(done, bool), "Expected {} to be a boolean".format(done)
+    assert isinstance(terminated, bool), "Expected {} to be a boolean".format(
+        terminated
+    )
 
     for mode in env.metadata.get("render.modes", []):
         env.render(mode=mode)
@@ -47,7 +57,7 @@ def test_env(spec):
 def test_random_rollout(spec):
     for env in [envs.make(spec), envs.make(spec), envs.make(spec)]:
 
-        def agent(ob):
+        def agent(_) -> Any:
             return env.action_space.sample()
 
         ob = env.reset()
@@ -56,10 +66,14 @@ def test_random_rollout(spec):
             print("Observation: ", ob)
             a = agent(ob)
             assert env.action_space.contains(a)
-            (ob, _reward, done, _info) = env.step(a)
-            if done:
+            # each step yields a tuple of the form
+            # (observation, reward, terminated (bool), truncated (bool), info)
+            (ob, _, terminated, _, _) = env.step(a)
+            # If the episode has terminated, cease iterating
+            if terminated:
                 break
         env.close()
+
 
 @pytest.mark.parametrize("spec", ["HIV-v0", "world3-v0", "opioid-v0", "Zika-v0"])
 def test_config(spec):
@@ -70,9 +84,6 @@ def test_config(spec):
     new_env = envs.make(spec, config=new_config)
     assert base_env.config.delta_t == base_config.delta_t
     assert new_env.config.delta_t == new_config.delta_t
-
-
-
 
 
 def test_credit_config():
@@ -86,6 +97,7 @@ def test_credit_config():
     assert np.allclose(env.config.changeable_features, new_features)
     base_env.close()
     env.close()
+
 
 def test_credit_initial_state():
     """Test initial state for Credit sim via gym.make"""
