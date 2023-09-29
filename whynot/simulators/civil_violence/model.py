@@ -4,7 +4,6 @@ import math
 from mesa import Agent
 from mesa import Model
 from mesa.time import BaseScheduler
-from mesa.space import _Grid
 
 
 class Citizen(Agent):

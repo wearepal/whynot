@@ -1,6 +1,4 @@
 """Global registry of environments, for consistency with openai gym."""
-import importlib
-
 from gym.envs.registration import EnvRegistry
 
 # Keep for consistency with original API

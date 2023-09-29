@@ -16,7 +16,6 @@ from typing import Any
 import whynot as wn
 import whynot.traceable_numpy as np
 from whynot.dynamics import BaseConfig, BaseIntervention, BaseState
-from whynot.simulators.credit.dataloader import CreditData
 
 
 @dataclasses.dataclass
@@ -50,7 +49,9 @@ class Config(BaseConfig):
 
     # Dynamics parameters
     #: Subset of the features that can be manipulated by the agent
-    changeable_features: np.ndarray = dataclasses.field(default_factory=lambda: np.array([0, 5, 7]))
+    changeable_features: np.ndarray = dataclasses.field(
+        default_factory=lambda: np.array([0, 5, 7])
+    )
 
     #: Model how much the agent adapt her features in response to a classifier
     epsilon: float = 0.1
